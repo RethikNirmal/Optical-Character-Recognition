@@ -121,6 +121,6 @@ train_graph.summary()
 # define checkpoint callback
 checkpoint = keras.callbacks.ModelCheckpoint(filepath=checkpoint_path, monitor='val_loss', mode='min', save_best_only=True)
 earlystop = keras.callbacks.EarlyStopping(monitor='val_loss', patience=5, mode='min')
-#history = train_graph.fit_generator(datagen.flow(image, Xidx, ycount, ylabel, batch_size=128),
-                          #nb_epoch=100, samples_per_epoch=len(Xidx),
-                          #callbacks=[checkpoint, earlystop])
+history = train_graph.fit_generator(datagen.flow(image, Xidx, ycount, ylabel, batch_size=128),
+                          nb_epoch=100, samples_per_epoch=len(Xidx),
+                          callbacks=[checkpoint, earlystop])
