@@ -7,10 +7,11 @@ import tensorflow as tf
 import keras
 from keras import callbacks
 import cv2
-from keras.utils import np_utils
+from keras.utils import np_utils,plot_model
 import h5py
 from data_extract import *
 from sklearn.model_selection import train_test_split
+
 datagen = tf.keras.preprocessing.image.ImageDataGenerator(
           featurewise_center = True,
           featurewise_std_normalization = True,
@@ -55,11 +56,11 @@ counter_model.add(Dense(max_digits,activation = 'softmax'))
 # print(counter_model.summary())
 
 # define detector model
-h_in_detector = Input(shape = (1024,))
+h_in_detector = Input(shape = (1024,),name = 'fromvis')
 
-idx_in_detector = Input(shape=(max_digits,))
+idx_in_detector = Input(shape=(max_digits,),name = 'IndexError')
 yl = Concatenate()([h_in_detector, idx_in_detector]) 
-
+print(yl.shape)
 yl = Dense(512, activation='relu')(yl)
 yl = BatchNormalization()(yl)
 yl = Dense(512, activation='relu')(yl)
@@ -114,9 +115,8 @@ Xidx_in = Input(shape=(max_digits,), name='train_input_idx')
 h = vision_model(Ximg_in)
 # print("Vision model output:",h.shape)
 yc = counter_model(h)
-# print("Counter model output:",yc.shape)
-yl = detector_model([h, Xidx_in])
 
+yl = detector_model([h, Xidx_in])
 
 train_graph = Model([Ximg_in, Xidx_in],[yc, yl])
 train_graph.compile(optimizer='adagrad', loss=['categorical_crossentropy','categorical_crossentropy'], metrics=['accuracy'])
@@ -126,9 +126,13 @@ train_graph.compile(optimizer='adagrad', loss=['categorical_crossentropy','categ
 
 #image, Ximg_val, Xidx, Xidx_val, ycount, ycount_val, ylabel, ylabel_val = train_test_split(image, Xidx, ycount, ylabel, test_size=0.05)
 earlystop = keras.callbacks.EarlyStopping(monitor='val_loss', patience=5, mode='min')
-history = train_graph.fit(datagen.flow(image, Xidx, ycount, ylabel),
-                          epochs=50
-                          )
+print(len(list(zip(image, Xidx))))
+X,Y = datagen.flow(list(zip(image, Xidx)), list(zip(ycount, ylabel)),batch_size = 32)
+print(X.shape)
+print(Y.shape)
+# history = train_graph.fit(X,Y,
+#                           epochs=50,steps_per_Epoch = image.shape[0]/32
+#                           )
 
 # model_json = model.to_json()
 # with open("model.json","w") as file:
